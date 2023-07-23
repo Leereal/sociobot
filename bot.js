@@ -9,8 +9,10 @@ dotenv.config();
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
-bot.use(async (ctx, next) => {
-  const photos = ctx.message.photo;
+bot.use(async (ctx, next) => { 
+  const photos = ctx.message ? ctx.message.photo : ctx.channelPost ?  ctx.channelPost.photo : null
+  const msg = ctx.message ? ctx.message : ctx.channelPost ?  ctx.channelPost : null
+  console.log("Photos  ",photos, " Ctx : ",ctx);
   if (photos && photos.length > 0) {
     //Send Images
     let largestPhoto = photos[0];
@@ -23,15 +25,15 @@ bot.use(async (ctx, next) => {
     const file_unique_id = largestPhoto.file_unique_id;
     const file = await bot.telegram.getFileLink(file_id, file_unique_id);
     const localLink = await downloadImage(file.href);
-    whatsapp({ image: file.href, caption: ctx.message.caption });
+    whatsapp({ image: file.href, caption: msg.caption });
     facebook(ctx.message.caption, file.href);
-    if (localLink) tweet(ctx.message.caption, localLink);
+    if (localLink) tweet(msg.caption, localLink);
   }
-  if (ctx.message && ctx.message.text) {
-    whatsapp(ctx.message.text);
-    facebook(ctx.message.text);
-    if (ctx.message.text.length <= 280) {
-      tweet(ctx.message.text);
+  if (msg && msg.text) {
+    whatsapp(msg.text);
+    facebook(msg.text);
+    if (msg.text.length <= 280) {
+      tweet(msg.text);
     } else {
       console.log(
         "Tweet failed. Characters are more than tweet limit of 280. "
@@ -61,7 +63,6 @@ async function downloadImage(url) {
 }
 
 bot.start((ctx) => {
-  process.env.CHANNEL = "This is the channel";
   ctx.reply("You started the bot");
 });
 bot.help((ctx) => {
