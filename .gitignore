@@ -1,2 +1,4 @@
 .env
 node_modules/
+token.json
+.env.copy.txt

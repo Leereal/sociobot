@@ -12,7 +12,7 @@ const bot = new Telegraf(BOT_TOKEN);
 bot.use(async (ctx, next) => { 
   const photos = ctx.message ? ctx.message.photo : ctx.channelPost ?  ctx.channelPost.photo : null
   const msg = ctx.message ? ctx.message : ctx.channelPost ?  ctx.channelPost : null
-  console.log("Photos  ",photos, " Ctx : ",ctx);
+  // console.log("Photos  ",photos, " Ctx : ",ctx);
   if (photos && photos.length > 0) {
     //Send Images
     let largestPhoto = photos[0];
@@ -26,7 +26,7 @@ bot.use(async (ctx, next) => {
     const file = await bot.telegram.getFileLink(file_id, file_unique_id);
     const localLink = await downloadImage(file.href);
     whatsapp({ image: file.href, caption: msg.caption });
-    facebook(ctx.message.caption, file.href);
+    facebook(msg.caption, file.href);
     if (localLink) tweet(msg.caption, localLink);
   }
   if (msg && msg.text) {
