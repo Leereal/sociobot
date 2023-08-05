@@ -3,9 +3,8 @@ import { TwitterApi } from "twitter-api-v2";
 //Documentation is here: https://www.npmjs.com/package/twitter-api-v2
 import axios from "axios";
 import dotenv from "dotenv";
-import  fs from 'fs';
+import fs from "fs";
 dotenv.config();
-
 
 // Read the JSON file and parse its contents
 const tokenFile = fs.readFileSync("token.json", "utf8");
@@ -79,13 +78,20 @@ export function facebook(post, image) {
         { message: post },
         function (postResponse) {
           if (!postResponse || postResponse.error) {
-            if (postResponse.error && postResponse.error.code === 190 && postResponse.error.error_subcode === 463) {
+            if (
+              postResponse.error &&
+              postResponse.error.code === 190 &&
+              postResponse.error.error_subcode === 463
+            ) {
               console.log("Error: Access token has expired.");
               // Perform actions to refresh or obtain a new access token if necessary
               // For example, you can call a function to renew the access token and retry the post
               // renewAccessToken().then(() => retryPost());
             } else {
-              console.error("Facebook Page Posting Error: ", postResponse.error);
+              console.error(
+                "Facebook Page Posting Error: ",
+                postResponse.error
+              );
             }
           } else {
             console.log("Successfully posted on Facebook: ", postResponse);
@@ -162,13 +168,13 @@ export function whatsapp(post) {
     process.env.WHATSAPP_TOKEN &&
     process.env.WHATSAPP_INSTANCE_ID
   ) {
-    const groupIds = process.env.WHATSAPP_GROUP_IDS.split(','); // Convert the comma-separated string to an array
+    const groupIds = process.env.WHATSAPP_GROUP_IDS.split(","); // Convert the comma-separated string to an array
     const postGap = process.env.WHATSAPP_POST_GAP * 1000 || 5000; // Default gap of 5 seconds if not provided
     const headers = {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     };
 
-    let sendMessageToGroup = (groupId) => {    
+    let sendMessageToGroup = (groupId) => {
       let url;
       let payload;
       if (post.image) {
@@ -176,24 +182,25 @@ export function whatsapp(post) {
           chatId: groupId,
           urlFile: post.image,
           fileName: "image.png",
-          caption: post.caption || ""
+          caption: post.caption || "",
         };
         url = `https://api.green-api.com/waInstance${process.env.WHATSAPP_INSTANCE_ID}/sendFileByUrl/${process.env.WHATSAPP_TOKEN}`;
-      } else {    
+      } else {
         payload = {
           chatId: groupId,
-          message: post
+          message: post,
         };
-        url = `https://api.green-api.com/waInstance${process.env.WHATSAPP_INSTANCE_ID}/sendMessage/${process.env.WHATSAPP_TOKEN}`;        
+        url = `https://api.green-api.com/waInstance${process.env.WHATSAPP_INSTANCE_ID}/sendMessage/${process.env.WHATSAPP_TOKEN}`;
       }
-      axios.post(url, payload, { headers })
-        .then(response => {
+      axios
+        .post(url, payload, { headers })
+        .then((response) => {
           console.log(
             `Message sent to group ${groupId}:`,
             JSON.stringify(response.data)
           );
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(`Error sending message to group ${groupId}:`, error);
         });
     };
@@ -209,6 +216,8 @@ export function whatsapp(post) {
 
     sendMessageWithGap(0);
   } else {
-    console.log("Posting on Whatsapp requires settings first. Not able to Post");
+    console.log(
+      "Posting on Whatsapp requires settings first. Not able to Post"
+    );
   }
 }

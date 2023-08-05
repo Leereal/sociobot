@@ -9,9 +9,33 @@ dotenv.config();
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
-bot.use(async (ctx, next) => { 
-  const photos = ctx.message ? ctx.message.photo : ctx.channelPost ?  ctx.channelPost.photo : null
-  const msg = ctx.message ? ctx.message : ctx.channelPost ?  ctx.channelPost : null
+bot.use(async (ctx, next) => {
+  const photos = ctx.message
+    ? ctx.message.photo
+    : ctx.channelPost
+    ? ctx.channelPost.photo
+    : null;
+  const msg = ctx.message
+    ? ctx.message
+    : ctx.channelPost
+    ? ctx.channelPost
+    : null;
+
+  // forward to other groups first
+  const telegramGroupIds = process.env.TELEGRAM_GROUPS.split(",");
+  telegramGroupIds.forEach(async (group) => {
+    try {
+      const sent = await ctx.telegram.forwardMessage(
+        group,
+        ctx.channelPost.chat.id,
+        ctx.channelPost.message_id
+      );
+      console.log("Message Forwarded to other Telegram groups successfully");
+    } catch (error) {
+      console.log("This type of message is not valid");
+    }
+  });
+
   // console.log("Photos  ",photos, " Ctx : ",ctx);
   if (photos && photos.length > 0) {
     //Send Images

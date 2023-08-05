@@ -1,4 +1,7 @@
 .env
 node_modules/
 token.json
+token-prod.json
 .env.copy.txt
+.vscode
+image.png
