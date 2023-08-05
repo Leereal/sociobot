@@ -10,58 +10,64 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.use(async (ctx, next) => {
-  const photos = ctx.message
-    ? ctx.message.photo
-    : ctx.channelPost
-    ? ctx.channelPost.photo
-    : null;
-  const msg = ctx.message
-    ? ctx.message
-    : ctx.channelPost
-    ? ctx.channelPost
-    : null;
+  if (ctx.channelPost.chat.id == process.env.TELEGRAM_CHANNEL_ID) {
+    const photos = ctx.message
+      ? ctx.message.photo
+      : ctx.channelPost
+      ? ctx.channelPost.photo
+      : null;
+    const msg = ctx.message
+      ? ctx.message
+      : ctx.channelPost
+      ? ctx.channelPost
+      : null;
 
-  // forward to other groups first
-  const telegramGroupIds = process.env.TELEGRAM_GROUPS.split(",");
-  telegramGroupIds.forEach(async (group) => {
-    try {
-      const sent = await ctx.telegram.forwardMessage(
-        group,
-        ctx.channelPost.chat.id,
-        ctx.channelPost.message_id
-      );
-      console.log("Message Forwarded to other Telegram groups successfully");
-    } catch (error) {
-      console.log("This type of message is not valid");
+    // forward to other groups first
+    if (process.env.TELEGRAM_CHANNEL_ID && process.env.TELEGRAM_GROUPS) {
+      const telegramGroupIds = process.env.TELEGRAM_GROUPS.split(",");
+      telegramGroupIds.forEach(async (group) => {
+        try {
+          const sent = await ctx.telegram.forwardMessage(
+            group,
+            ctx.channelPost.chat.id,
+            ctx.channelPost.message_id
+          );
+          console.log(
+            "Message Forwarded to other Telegram groups successfully"
+          );
+        } catch (error) {
+          console.log("This type of message is not valid");
+        }
+      });
     }
-  });
 
-  // console.log("Photos  ",photos, " Ctx : ",ctx);
-  if (photos && photos.length > 0) {
-    //Send Images
-    let largestPhoto = photos[0];
-    for (const photo of photos) {
-      if (photo.file_size > largestPhoto.file_size) {
-        largestPhoto = photo;
+    // console.log("Photos  ",photos, " Ctx : ",ctx);
+    if (photos && photos.length > 0) {
+      //Send Images
+      let largestPhoto = photos[0];
+      for (const photo of photos) {
+        if (photo.file_size > largestPhoto.file_size) {
+          largestPhoto = photo;
+        }
       }
+      const file_id = largestPhoto.file_id;
+      const file_unique_id = largestPhoto.file_unique_id;
+      const file = await bot.telegram.getFileLink(file_id, file_unique_id);
+      const localLink = await downloadImage(file.href);
+      whatsapp({ image: file.href, caption: msg.caption });
+      facebook(msg.caption, file.href);
+      if (localLink) tweet(msg.caption, localLink);
     }
-    const file_id = largestPhoto.file_id;
-    const file_unique_id = largestPhoto.file_unique_id;
-    const file = await bot.telegram.getFileLink(file_id, file_unique_id);
-    const localLink = await downloadImage(file.href);
-    whatsapp({ image: file.href, caption: msg.caption });
-    facebook(msg.caption, file.href);
-    if (localLink) tweet(msg.caption, localLink);
-  }
-  if (msg && msg.text) {
-    whatsapp(msg.text);
-    facebook(msg.text);
-    if (msg.text.length <= 280) {
-      tweet(msg.text);
-    } else {
-      console.log(
-        "Tweet failed. Characters are more than tweet limit of 280. "
-      );
+    if (msg && msg.text) {
+      whatsapp(msg.text);
+      facebook(msg.text);
+      if (msg.text.length <= 280) {
+        tweet(msg.text);
+      } else {
+        console.log(
+          "Tweet failed. Characters are more than tweet limit of 280. "
+        );
+      }
     }
   }
   await next();
