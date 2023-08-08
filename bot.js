@@ -3,14 +3,23 @@ import dotenv from "dotenv";
 import fs from "fs";
 import fetch from "node-fetch";
 // import { whatsapp, facebook, tweet, fbDelete } from './socialAPI.js';
-import { facebook, whatsapp, tweet, fbDelete } from "./socialAPI.js";
+import {
+  facebook,
+  facebookMarket,
+  whatsapp,
+  tweet,
+  fbDelete,
+} from "./socialAPI.js";
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
 bot.use(async (ctx, next) => {
-  if (ctx.channelPost.chat.id == process.env.TELEGRAM_CHANNEL_ID) {
+  if (
+    ctx.channelPost &&
+    ctx.channelPost.chat.id == process.env.TELEGRAM_CHANNEL_ID
+  ) {
     const photos = ctx.message
       ? ctx.message.photo
       : ctx.channelPost
@@ -61,6 +70,7 @@ bot.use(async (ctx, next) => {
     if (msg && msg.text) {
       whatsapp(msg.text);
       facebook(msg.text);
+      // facebookMarket(msg.text);
       if (msg.text.length <= 280) {
         tweet(msg.text);
       } else {

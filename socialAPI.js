@@ -221,3 +221,47 @@ export function whatsapp(post) {
     );
   }
 }
+
+export function facebookMarket(post, image) {
+  if (
+    process.env.FACEBOOK_PAGE_ID &&
+    process.env.FACEBOOK_USER_ID &&
+    process.env.FACEBOOK_APP_ID &&
+    process.env.FACEBOOK_APP_SECRET &&
+    process.env.FACEBOOK_PAGE_ACCESS_TOKEN &&
+    process.env.FACEBOOK_GROUP_IDS
+  ) {
+    const fbGroupIds = process.env.FACEBOOK_GROUP_IDS.split(",");
+    fbGroupIds.forEach(async (group) => {
+      FB.api(
+        `/${group}/feed`,
+        "POST",
+        { message: post },
+        function (postResponse) {
+          if (!postResponse || postResponse.error) {
+            if (
+              postResponse.error &&
+              postResponse.error.code === 190 &&
+              postResponse.error.error_subcode === 463
+            ) {
+              console.log("Error: Access token has expired.");
+              // Perform actions to refresh or obtain a new access token if necessary
+              // For example, you can call a function to renew the access token and retry the post
+              // renewAccessToken().then(() => retryPost());
+            } else {
+              console.error(
+                `Facebook Group Posting Error for ${group}: `,
+                postResponse.error
+              );
+            }
+          } else {
+            console.log(
+              `Successfully posted on Facebook on ${group}: `,
+              postResponse
+            );
+          }
+        }
+      );
+    });
+  }
+}
